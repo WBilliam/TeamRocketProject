@@ -1,0 +1,54 @@
+int redLed = 12;
+int blueLed = 11;
+int buzzer = 10;
+int smokeA0 = A5;
+//oriako shmeio
+int sensorThres = 400;
+
+void setup() {
+  pinMode(redLed, OUTPUT);
+  pinMode(blueLed, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+  pinMode(smokeA0, INPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int analogSensor = analogRead(smokeA0);
+
+  Serial.print("Pin A0: ");
+  Serial.println(analogSensor);
+  // elegxos gia oriako shmeio
+  if (analogSensor > sensorThres)
+  {
+    digitalWrite(redLed, HIGH);
+    digitalWrite(blueLed, LOW);
+    tone(buzzer, 1000, 200);
+    //wifi
+    if(wifiSerial.available()>0){
+
+    String message = readWifiSerialMessage();
+    
+    if(find(message,"esp8266:")){
+       String result = sendToWifi(message.substring(8,message.length()),responseTime,DEBUG);
+      if(find(result,"OK"))
+        sendData("\n"+result);
+      else
+        sendData("\nErrRead");               //At command ERROR CODE for Failed Executing statement
+    }else
+    if(find(message,"SOS")){  //receives HELLO from wifi
+        sendData("\\nSOS!");    //arduino says HI
+    else{
+      sendData("\nErrRead");                 //Command ERROR CODE for UNABLE TO READ
+    }
+  }
+    
+  }
+  else
+  {
+    digitalWrite(redLed, LOW);
+    digitalWrite(blueLed, HIGH);
+    noTone(buzzer);
+  }
+  delay(100);
+}
